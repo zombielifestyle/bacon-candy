@@ -5,10 +5,30 @@
         <link rel="manifest" href="./manifest.json">
         <style type="text/css">
         canvas, body, html { margin: 0; padding: 0; border: 0;background-color: black;}
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px; 
+            background-color: red;
+            opacity: 0.3;
+        }
+        #right {right: -1em; bottom: -1em;}
+        #rright {right: -1em; bottom: 10em;}
+        #left {left: 1em; bottom: -1em;}
+        #rleft {left: 1em; bottom: 10em;}
+        #down {left: 14em; bottom: -4em; width: 60%;}
         </style>
     </head>
     <body>
     <script src="./main.js"></script>
-    <canvas id="stage"></canvas>
+    <div>
+        <div id="right" class="circle"></div>
+        <div id="rright" class="circle">rotate</div>
+        <div id="left" class="circle"></div>
+        <div id="rleft" class="circle"></div>
+        <div id="down" class="circle"></div>
+        <canvas id="stage"></canvas>
+    </div>
     </body>
 </html>

@@ -1,262 +1,259 @@
 
 var matrix = {
-    width: 10,
-    height: 22,
-    size: 32,
+    w: 10,
+    h: 22,
     array: [],
-};
-var shapes = {
+},
+shapes = {
     i: {
-        color: 'red',
+        c: 'red',
         array:[
             [1,1,1,1],
         ],
     },
     j: {
-        color: 'magenta',
+        c: 'magenta',
         array:[
             [1,1,1], //0 X i=0 / j=1
             [0,0,1],
         ],
     },
     l: {
-        color: 'yellow',
+        c: 'yellow',
         array:[
             [1,1,1], //0 X i=0 / j=1
             [1,0,0],
         ],
     },
     o: {
-        color: 'cyan',
+        c: 'cyan',
         array:[
             [1,1], //0 X i=0 / j=1
             [1,1],
         ],
     },
     s: {
-        color: 'blue',
+        c: 'blue',
         array:[
             [0,1,1], //0 X i=0 / j=1
             [1,1,0],
         ],
     },
     t: {
-        color: 'silver',
+        c: 'silver',
         array:[
             [1,1,1], //0 X i=0 / j=1
             [0,1,0],
         ],
     },
     z: {
-        color: 'green',
+        c: 'green',
         array:[
             [1,1,0], //0 X i=0 / j=1
             [0,1,1],
         ],
     },
-};
-var rnd = function(){
-    return Object.keys(shapes)[Math.round(Math.random() * 6)];
-}
+},
+update = true,
+size = 32,
+w = window,
+d = document,
+m = Math,
+j = JSON;
+w.onload = function(){
+    (function(w, d, e, rand, round, floor, ael, jp, js){
 
-window.onload = function(){
-    main(window, document.getElementById('stage'))
-};
+        function collision(matrix, shape, x, y) {
+            if (
+                (x + shape.array[0].length > matrix.w) ||
+                (x < 0) ||
+                (y + shape.array.length > matrix.h)
+            ) return 1;
+            return walk(shape, function(s, _x, _y){
+                return (s.array[_y][_x] && matrix.array[_y+y][_x+x]);
+            });
+        }
 
-function init(w, e){
-    console.log(w.orientation in [180,0]);
-    matrix.size = Math.floor(w.innerHeight / matrix.height);
-    e.width  = matrix.size * matrix.width;
-    e.height = matrix.size * matrix.height;
-    e.style.marginLeft = (w.innerWidth - e.width) / 2;
+        function walk(m, f){
+            var h = m.h || m.array.length - 1,
+                w = m.w || m.array[0].length - 1,
+                my, mx;
 
-    console.log("screen", window.innerHeight, window.innerWidth, w.orientation);
-    console.log("size", matrix.size);
-}
-
-function main(w, e){
-    init(w, e);
-    w.addEventListener("orientationchange", function(event){
-        init(w, e);
-        drawMatrix(c, matrix);
-        drawShape(c, shape);
-    });
-    
-    var c = e.getContext('2d');
-    var shape = JSON.parse(JSON.stringify(shapes[rnd()]));
-    
-    createMatrix(matrix);
-    shape.x = 4;
-    shape.y = 0;
-
-    drawMatrix(c, matrix);
-    drawShape(c, shape);
-
-    document.addEventListener('keydown', function(e){
-        //console.log(e);
-        switch (e.which) {
-            case 38: // up
-                var newShape = rotateCW(shape);
-                if (!collision(matrix, newShape, newShape.x, newShape.y)) {
-                    shape = newShape;
+            //console.log(h,w);
+            for (my = 0; my <= h; my++) {
+                for (mx = 0; mx <= w; mx++) {
+                    if (f(m, mx, my)) return 1;
                 }
-                //rotateCCW(shape);
-            break;
-            case 39: // right
-                if (!collision(matrix, shape, shape.x+1, shape.y)) {
-                    shape.x++;
+            }        
+        } 
+
+        function rotate(shape, counter){
+            shape = jp(js(shape));
+            var s = shape.array, t = [], y, x;
+            if (counter) {
+                for (y in s) s[y] = s[y].reverse();
+            } else {
+                s = s.reverse();
+            }
+            for (y=0; y<s.length; y++) {
+                for (x=0; x<s[y].length; x++) {
+                    t[x] || (t[x] = []);
+                    t[x][y] = s[y][x];
                 }
-            break;
-            case 37: // left
-                if (!collision(matrix, shape, shape.x-1, shape.y)) {
-                    shape.x--;
-                }
-            break;
-            case 40: // down
+            }
+            //console.log(t);
+            shape.array = t;
+            return shape;
+        }
+
+        function bust(matrix){
+            var y, x, s, c = 0;
+            for(y = matrix.array.length - 1; --y;){
+                for (x=0, s=0; x<=matrix.w ; s+=!!matrix.array[y][x], x++){}
+                if(s == matrix.w && ++c) matrix.array.splice(y,1);
+            }
+            //console.log(c,matrix);
+            for (;c-- > 0; matrix.array.unshift(new Array(matrix.w).fill(0))){}
+        }
+
+        function make(){
+            var s = jp(js(shapes[Object.keys(shapes)[round(rand() * 6)]]));
+            s.x = 4;
+            s.y = 0;
+            return s;
+        };
+
+        function init() {
+            size = floor(w.innerHeight / matrix.h);
+            e.width  = size * matrix.w;
+            e.height = size * matrix.h;
+            update = 1; e.style.marginLeft = (w.innerWidth - e.width) / 2;
+            
+            //console.log("screen", w.innerHeight, w.innerWidth, w.orientation);
+            //console.log("size", size);
+        }
+        
+        init();
+        var c = e.getContext('2d');
+        var shape = make();
+        
+        walk(matrix, function(m,x,y){
+            if (!x) m.array.push([]);
+            m.array[y][x] = 0;
+        });
+
+        function loop(){
+            if (update){
+                walk(matrix, function(m,x,y){
+                    c.fillStyle = m.array[y][x] ? m.array[y][x] : 'white';
+                    c.fillRect(
+                        x * size,
+                        y * size, 
+                        size,
+                        size
+                    );
+                });
+                walk(shape, function(s,x,y){
+                    if (s.array[y][x]) {
+                        c.fillStyle = shape.c;
+                        c.fillRect(
+                            (x + shape.x) * size,
+                            (y + shape.y) * size, 
+                            size,
+                            size
+                        );
+                    }
+
+                });
+                //drawShape(c, shape);
+                update = 0;
+            }
+            w.requestAnimationFrame(loop);
+        };
+        loop();
+
+
+        ael('touchstart', function firstBlood() {
+            w.removeEventListener('touchstart', firstBlood, false);
+            d.getElementById('right').addEventListener('touchstart', function(e){
+                if (!collision(matrix, shape, shape.x+1, shape.y))
+                    update = (shape.x+=1)+1;
+            });  
+            d.getElementById('left').addEventListener('touchstart', function(e){
+                if (!collision(matrix, shape, shape.x-1, shape.y))
+                    update = (shape.x+=-1)+1;
+            });  
+            d.getElementById('rright').addEventListener('touchstart', function(e){
+                newShape = rotate(shape,0);
+                if (!collision(matrix, newShape, newShape.x, newShape.y))
+                    update = shape = newShape;
+            });  
+            d.getElementById('rleft').addEventListener('touchstart', function(e){
+                newShape = rotate(shape,1);
+                if (!collision(matrix, newShape, newShape.x, newShape.y))
+                    update = shape = newShape;
+            });  
+            d.getElementById('down').addEventListener('touchstart', function(e){
                 if (!collision(matrix, shape, shape.x, shape.y+1)) {
                     shape.y++;
                 } else {
-                    mergeShapeToMatrix(shape, matrix);
-                    bustFullRows(matrix);
-                    shape = JSON.parse(JSON.stringify(shapes[rnd()]));
-                    shape.x = 4;
-                    shape.y = 0;
+                    walk(shape, function(s, x, y){
+                        if (s.array[y][x]) matrix.array[y+shape.y][x+shape.x] = s.c;
+                    });
+                    bust(matrix);
+                    shape = make();
                 }
-            break;
-        } 
-        drawMatrix(c, matrix);
-        drawShape(c, shape);
-    });
-}
-
-function bustFullRows(matrix){
-    var rows = [];
-    for (var i = 0; i < matrix.array.length; i++) {
-        var sum = matrix.array[i].reduce(function(a,b){return b?a+1:a;}, 0);
-        if (sum == matrix.width) {
-            console.log("bust " + i);
-            //matrix.array.unshift(matrix.array.slice(i));
-            rows.push(i);
-        }
-    }
-    for (var i in rows) {
-        matrix.array.splice(rows[i],1)
-        matrix.array.unshift(new Array(matrix.width).fill(0));
-        for (var i in matrix.array[0]) {
-            matrix.array[0][i] = 0;
-        }
-    }
-}
-
-function collision(matrix, shape, x, y) {
-    if (x + shape.array[0].length > matrix.width) {
-        console.log('a');
-        return true;
-    } else if (x < 0) {
-        console.log('b');
-        return true;
-    } else if (y + shape.array.length > matrix.height) {
-        console.log('c');
-        return true;
-    }
-    for (i = 0; i < shape.array.length; i++) {
-        for (j = 0; j < shape.array[i].length; j++) {
-            if (shape.array[i][j] && matrix.array[i+y][j+x]) {
-                console.log('d');
-                return true;
+                update = true;
+            });  
+        }, false);
+        
+        ael('keydown', function(e){
+            //console.log(e.which);
+            var k = e.which, newShape;
+            // up
+            if (k==88||k==89||k==38) {
+                newShape = rotate(shape,k%2);
+                if (!collision(matrix, newShape, newShape.x, newShape.y))
+                    update = shape = newShape;
             }
-        }
-    }
-    return false;
-}
-
-function mergeShapeToMatrix(shape, matrix){
-    for (i=0; i<shape.array.length; i++) {
-        for (j=0; j<shape.array[i].length; j++) {
-            if (shape.array[i][j]) {
-                matrix.array[i+shape.y][j+shape.x] = shape.color;
+            // left / right
+            if (k==39||k==37) {
+                k -= 38;
+                if (!collision(matrix, shape, shape.x+k, shape.y))
+                    update = (shape.x+=k)+1;
             }
-        }
-    }
-    //console.log(matrix.array);
-}
-
-function createMatrix(matrix){
-    var a = [];
-    for (var j = 0; j <= matrix.height; j++) {
-        a.push([]);
-        for (var i = 0; i <= matrix.width; i++) {
-            a[j][i] = 0;
-        }
-    }
-    //console.log(a);
-    matrix.array = a;
-}
-
-function rotateCCW(shape){
-    shape = JSON.parse(JSON.stringify(shape));
-    var s = shape.array;
-    var t = [];
-    for (i=0; i<s.length; i++) {
-        var _ = s[i].reverse();
-        for (j=0; j<_.length; j++) {
-            if (typeof t[j] == 'undefined') t[j] = [];
-            t[j][i] = _[j];
-        }
-    }
-    //console.log(t);
-    shape.array = t;
-    return shape;
-}
-function rotateCW(shape){
-    shape = JSON.parse(JSON.stringify(shape));
-    var s = shape.array.reverse();
-    var t = [];
-    for (i=0; i<s.length; i++) {
-        for (j=0; j<s[i].length; j++) {
-            if (typeof t[j] == 'undefined') t[j] = [];
-            t[j][i] = s[i][j];
-        }
-    }
-    //console.log(t);
-    shape.array = t;
-    return shape;
-}
-
-function drawMatrix(c, shape){
-    //console.log("shape x: " + shape.x + " y: " + shape.y);
-    for (var i = 0; i < shape.array.length; i++) {
-        for (var j = 0; j < shape.array[i].length; j++) {
-            c.fillStyle = 'white';
-            if (shape.array[i][j]) {
-                //console.log("i: " + i + " j: " + j + " is: " + shape.array[i][j]);
-                c.fillStyle = shape.array[i][j];
+            // down
+            if (k==40||k==32) {
+                if (!collision(matrix, shape, shape.x, shape.y+1)) {
+                    shape.y++;
+                } else {
+                    walk(shape, function(s, x, y){
+                        if (s.array[y][x]) matrix.array[y+shape.y][x+shape.x] = s.c;
+                    });
+                    bust(matrix);
+                    shape = make();
+                }
+                update = true;
             }
-            c.fillRect(
-                j * matrix.size,
-                i * matrix.size, 
-                matrix.size,
-                matrix.size
-            );
-        }
-    }
-}
+        });
+        ael('orientationchange', init);
 
-function drawShape(c, shape, x, y){
-    c.fillStyle = shape.color;
-//    console.log("shape x: " + shape.x + " y: " + shape.y);
-    for (var i = 0; i < shape.array.length; i++) {
-        for (var j = 0; j < shape.array[i].length; j++) {
-            if (shape.array[i][j]) {
-                //console.log("i: " + i + " j: " + j + " is: " + shape.array[i][j]);
-                c.fillRect(
-                    (j + shape.x) * matrix.size,
-                    (i + shape.y) * matrix.size, 
-                    matrix.size,
-                    matrix.size
-                );
-            }
-        }
-    }
-}
+    })(
+        w, 
+        d,
+        d.getElementById('stage'),
+        m.random,
+        m.round,
+        m.floor,
+        d.addEventListener,
+        j.parse,
+        j.stringify
+    );
+};
+
+
+
+
+   
+
 
