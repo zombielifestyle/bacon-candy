@@ -5,30 +5,31 @@
         <link rel="manifest" href="./manifest.json">
         <style type="text/css">
         canvas, body, html { margin: 0; padding: 0; border: 0;background-color: black;}
-        .circle {
+        .btn {
             position: absolute;
-            border-radius: 50%;
-            width: 200px;
-            height: 200px; 
-            background-color: red;
-            opacity: 0.3;
+            width: 50px;
+            height: 50px; 
+            opacity: 0.2;
         }
-        #right {right: -1em; bottom: -1em;}
-        #rright {right: -1em; bottom: 10em;}
-        #left {left: 1em; bottom: -1em;}
-        #rleft {left: 1em; bottom: 10em;}
-        #down {left: 14em; bottom: -4em; width: 60%;}
+        #ui { display: none;}
+        #right {right: 0; bottom: 0; background-color: blue;}
+        #rright {right: 0; bottom: 50px; background-color: green;}
+        #left {left: 0; bottom: 0; background-color: blue;}
+        #rleft {left: 0; bottom: 50px; background-color: green;}
+        #down1 {left: 50px; bottom: 0; background-color: silver;}
+        #down2 {right: 50px; bottom: 0; background-color: silver;}
         </style>
     </head>
     <body>
     <script src="./main.js"></script>
-    <div>
-        <div id="right" class="circle"></div>
-        <div id="rright" class="circle">rotate</div>
-        <div id="left" class="circle"></div>
-        <div id="rleft" class="circle"></div>
-        <div id="down" class="circle"></div>
-        <canvas id="stage"></canvas>
+    <div id="ui">
+        <div id="right" class="btn"></div>
+        <div id="rright" class="btn"></div>
+        <div id="left" class="btn"></div>
+        <div id="rleft" class="btn"></div>
+        <div id="down1" class="btn"></div>
+        <div id="down2" class="btn"></div>
     </div>
+    <canvas id="stage"></canvas>
     </body>
 </html>

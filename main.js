@@ -172,39 +172,45 @@ w.onload = function(){
         };
         loop();
 
+        function playerMove(d) {
+            if (!collision(matrix, shape, shape.x+d, shape.y))
+                update = (shape.x+=d)+1;
+        }
+        function playerRotate(d) {
+            newShape = rotate(shape,d);
+            if (!collision(matrix, newShape, newShape.x, newShape.y))
+                update = shape = newShape;
+        }
+        function playerDown() {
+            if (!collision(matrix, shape, shape.x, shape.y+1)) {
+                shape.y++;
+            } else {
+                walk(shape, function(s, x, y){
+                    if (s.array[y][x]) matrix.array[y+shape.y][x+shape.x] = s.c;
+                });
+                bust(matrix);
+                shape = make();
+            }
+            update = true;
+        }
 
         ael('touchstart', function firstBlood() {
+            d.getElementById('ui').style.display = 'block';
             w.removeEventListener('touchstart', firstBlood, false);
             d.getElementById('right').addEventListener('touchstart', function(e){
-                if (!collision(matrix, shape, shape.x+1, shape.y))
-                    update = (shape.x+=1)+1;
+                playerMove(1);
             });  
             d.getElementById('left').addEventListener('touchstart', function(e){
-                if (!collision(matrix, shape, shape.x-1, shape.y))
-                    update = (shape.x+=-1)+1;
+                playerMove(-1);
             });  
             d.getElementById('rright').addEventListener('touchstart', function(e){
-                newShape = rotate(shape,0);
-                if (!collision(matrix, newShape, newShape.x, newShape.y))
-                    update = shape = newShape;
+                playerRotate(0);
             });  
             d.getElementById('rleft').addEventListener('touchstart', function(e){
-                newShape = rotate(shape,1);
-                if (!collision(matrix, newShape, newShape.x, newShape.y))
-                    update = shape = newShape;
+                playerRotate(1);
             });  
-            d.getElementById('down').addEventListener('touchstart', function(e){
-                if (!collision(matrix, shape, shape.x, shape.y+1)) {
-                    shape.y++;
-                } else {
-                    walk(shape, function(s, x, y){
-                        if (s.array[y][x]) matrix.array[y+shape.y][x+shape.x] = s.c;
-                    });
-                    bust(matrix);
-                    shape = make();
-                }
-                update = true;
-            });  
+            d.getElementById('down1').addEventListener('touchstart', playerDown);  
+            d.getElementById('down2').addEventListener('touchstart', playerDown);  
         }, false);
         
         ael('keydown', function(e){
@@ -212,32 +218,18 @@ w.onload = function(){
             var k = e.which, newShape;
             // up
             if (k==88||k==89||k==38) {
-                newShape = rotate(shape,k%2);
-                if (!collision(matrix, newShape, newShape.x, newShape.y))
-                    update = shape = newShape;
+                playerRotate(k%2);
             }
             // left / right
             if (k==39||k==37) {
-                k -= 38;
-                if (!collision(matrix, shape, shape.x+k, shape.y))
-                    update = (shape.x+=k)+1;
+                playerMove(k-38);
             }
             // down
             if (k==40||k==32) {
-                if (!collision(matrix, shape, shape.x, shape.y+1)) {
-                    shape.y++;
-                } else {
-                    walk(shape, function(s, x, y){
-                        if (s.array[y][x]) matrix.array[y+shape.y][x+shape.x] = s.c;
-                    });
-                    bust(matrix);
-                    shape = make();
-                }
-                update = true;
+                playerDown();
             }
         });
         ael('orientationchange', init);
-
     })(
         w, 
         d,
